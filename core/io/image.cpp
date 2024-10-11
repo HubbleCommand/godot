@@ -1402,7 +1402,7 @@ void Image::crop_from_point(int p_x, int p_y, int p_width, int p_height) {
 		memcpy(w + (offset_dst * pixel_size), w + (offset_orig * pixel_size), row_copy_size * pixel_size);
 
 		//if (empty_buffer_size > 0)
-			memcpy(w + ((offset_dst + row_copy_size) * pixel_size), buffer_empty, empty_buffer_size * pixel_size);
+		memcpy(w + ((offset_dst + row_copy_size) * pixel_size), buffer_empty, empty_buffer_size * pixel_size);
 
 		r += forward ? 1 : -1;
 	}

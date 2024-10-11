@@ -1369,7 +1369,7 @@ void Image::crop_from_point(int p_x, int p_y, int p_width, int p_height) {
 
 	uint8_t *w = data.ptrw();
 	int size = p_width * p_height * pixel_size;
-	
+
 	bool grew = false;
 	if (p_width * p_height > width * height) {
 		Error err = data.resize_zeroed(size);

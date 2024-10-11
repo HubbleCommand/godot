@@ -1342,10 +1342,6 @@ void Image::crop_from_point(int p_x, int p_y, int p_width, int p_height) {
 	ERR_FAIL_COND_MSG(p_x + p_width > MAX_WIDTH, "End x position cannot be greater than " + itos(MAX_WIDTH) + ".");
 	ERR_FAIL_COND_MSG(p_y + p_height > MAX_HEIGHT, "End y position cannot be greater than " + itos(MAX_HEIGHT) + ".");
 
-	/* to save memory, cropping should be done in-place, however, since this function
-	   will most likely either not be used much, or in critical areas, for now it won't, because
-	   it's a waste of time. */
-
 	if (p_width == width && p_height == height && p_x == 0 && p_y == 0) {
 		return;
 	}
@@ -1353,33 +1349,81 @@ void Image::crop_from_point(int p_x, int p_y, int p_width, int p_height) {
 	uint8_t pdata[16]; //largest is 16
 	uint32_t pixel_size = get_format_pixel_size(format);
 
-	Image dst(p_width, p_height, false, format);
+	bool used_mipmaps = has_mipmaps();
+	if (used_mipmaps) {
+		clear_mipmaps();
+	}
 
-	{
-		const uint8_t *r = data.ptr();
-		uint8_t *w = dst.data.ptrw();
+	if (p_x > width || p_y > height) {
+		data.resize(0);
+		data.resize_zeroed(p_width * p_height * pixel_size);
 
-		int m_h = p_y + p_height;
-		int m_w = p_x + p_width;
-		for (int y = p_y; y < m_h; y++) {
-			for (int x = p_x; x < m_w; x++) {
-				if ((x >= width || y >= height)) {
-					for (uint32_t i = 0; i < pixel_size; i++) {
-						pdata[i] = 0;
-					}
-				} else {
-					_get_pixelb(x, y, pixel_size, r, pdata);
-				}
+		width = p_width;
+		height = p_height;
 
-				dst._put_pixelb(x - p_x, y - p_y, pixel_size, w, pdata);
-			}
+		if (used_mipmaps) {
+			generate_mipmaps();
 		}
+		return;
 	}
 
-	if (has_mipmaps()) {
-		dst.generate_mipmaps();
+	uint8_t *w = data.ptrw();
+	int size = p_width * p_height * pixel_size;
+	
+	bool grew = false;
+	if (p_width * p_height > width * height) {
+		Error err = data.resize_zeroed(size);
+		ERR_FAIL_COND_MSG(err != OK, "Failed to grow image data vector.");
+		grew = true;
 	}
-	_copy_internals_from(dst);
+
+	int row_copy_size = p_width;
+	int empty_buffer_size = 0;
+	bool forward = true;	//Iteration direction
+
+	int effective = width - p_x;
+	if (p_width > effective) {
+		empty_buffer_size = p_width - effective;
+		row_copy_size = effective;
+		forward = false;
+	}
+
+	uint8_t *buffer_row = new uint8_t[row_copy_size * pixel_size];
+	const uint8_t *buffer_empty = new uint8_t[empty_buffer_size * pixel_size]{0};
+
+	int r = forward ? 0: p_height - 1;
+
+	while (r >= 0 && r < p_height) {
+		int offset_orig = p_x + ((r + (p_height > height ? 0 : p_y)) * width);
+		int offset_dst = r * p_width;
+
+		//memcpy(buffer_row, w + (offset_orig * pixel_size), row_copy_size * pixel_size);
+		//memcpy(w + (offset_dst * pixel_size), buffer_row, row_copy_size * pixel_size);
+		memcpy(w + (offset_dst * pixel_size), w + (offset_orig * pixel_size), row_copy_size * pixel_size);
+
+		//if (empty_buffer_size > 0)
+			memcpy(w + ((offset_dst + row_copy_size) * pixel_size), buffer_empty, empty_buffer_size * pixel_size);
+
+		r += forward ? 1 : -1;
+	}
+
+	if (forward) {
+		Error err = data.resize(size);
+		ERR_FAIL_COND_MSG(err != OK, "Failed to reduce image data vector.");
+	}
+
+	if (p_y > 0 && p_height > height) {
+		int offset = p_y * p_width;
+		int size = (p_width * p_height) - offset;
+		memcpy(w, w + offset * pixel_size, size * pixel_size);
+	}
+
+	width = p_width;
+	height = p_height;
+
+	if (used_mipmaps) {
+		generate_mipmaps();
+	}
 }
 
 void Image::crop(int p_width, int p_height) {
@@ -3439,6 +3483,7 @@ void Image::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("shrink_x2"), &Image::shrink_x2);
 
 	ClassDB::bind_method(D_METHOD("crop", "width", "height"), &Image::crop);
+	ClassDB::bind_method(D_METHOD("crop_from_point", "x", "y", "width", "height"), &Image::crop_from_point);
 	ClassDB::bind_method(D_METHOD("flip_x"), &Image::flip_x);
 	ClassDB::bind_method(D_METHOD("flip_y"), &Image::flip_y);
 	ClassDB::bind_method(D_METHOD("generate_mipmaps", "renormalize"), &Image::generate_mipmaps, DEFVAL(false));

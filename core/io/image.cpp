@@ -1370,11 +1370,9 @@ void Image::crop_from_point(int p_x, int p_y, int p_width, int p_height) {
 	uint8_t *w = data.ptrw();
 	int size = p_width * p_height * pixel_size;
 
-	bool grew = false;
 	if (p_width * p_height > width * height) {
 		Error err = data.resize_zeroed(size);
 		ERR_FAIL_COND_MSG(err != OK, "Failed to grow image data vector.");
-		grew = true;
 	}
 
 	int row_copy_size = p_width;
@@ -1388,21 +1386,14 @@ void Image::crop_from_point(int p_x, int p_y, int p_width, int p_height) {
 		forward = false;
 	}
 
-	uint8_t *buffer_row = new uint8_t[row_copy_size * pixel_size];
-	const uint8_t *buffer_empty = new uint8_t[empty_buffer_size * pixel_size]{ 0 };
-
 	int r = forward ? 0 : p_height - 1;
 
 	while (r >= 0 && r < p_height) {
 		int offset_orig = p_x + ((r + (p_height > height ? 0 : p_y)) * width);
 		int offset_dst = r * p_width;
 
-		//memcpy(buffer_row, w + (offset_orig * pixel_size), row_copy_size * pixel_size);
-		//memcpy(w + (offset_dst * pixel_size), buffer_row, row_copy_size * pixel_size);
 		memcpy(w + (offset_dst * pixel_size), w + (offset_orig * pixel_size), row_copy_size * pixel_size);
-
-		//if (empty_buffer_size > 0)
-		memcpy(w + ((offset_dst + row_copy_size) * pixel_size), buffer_empty, empty_buffer_size * pixel_size);
+		memset(w + ((offset_dst + row_copy_size) * pixel_size), 0, empty_buffer_size * pixel_size);
 
 		r += forward ? 1 : -1;
 	}
@@ -1414,8 +1405,8 @@ void Image::crop_from_point(int p_x, int p_y, int p_width, int p_height) {
 
 	if (p_y > 0 && p_height > height) {
 		int offset = p_y * p_width;
-		int size = (p_width * p_height) - offset;
-		memcpy(w, w + offset * pixel_size, size * pixel_size);
+		int shift_size = (p_width * p_height) - offset;
+		memcpy(w, w + offset * pixel_size, shift_size * pixel_size);
 	}
 
 	width = p_width;

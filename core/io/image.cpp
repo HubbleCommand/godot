@@ -1346,7 +1346,6 @@ void Image::crop_from_point(int p_x, int p_y, int p_width, int p_height) {
 		return;
 	}
 
-	uint8_t pdata[16]; //largest is 16
 	uint32_t pixel_size = get_format_pixel_size(format);
 
 	bool used_mipmaps = has_mipmaps();

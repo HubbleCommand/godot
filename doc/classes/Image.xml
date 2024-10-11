@@ -157,6 +157,16 @@
 				Crops the image to the given [param width] and [param height]. If the specified size is larger than the current size, the extra area is filled with black pixels.
 			</description>
 		</method>
+		<method name="crop_from_point">
+			<return type="void" />
+			<param index="0" name="x" type="int" />
+			<param index="1" name="y" type="int" />
+			<param index="2" name="width" type="int" />
+			<param index="3" name="height" type="int" />
+			<description>
+				Crops the image to the given [param width] and [param height], starting at the given [param x], [param y] coordinates. If the specified size is larger than the current size, the extra area is filled with black pixels.
+			</description>
+		</method>
 		<method name="decompress">
 			<return type="int" enum="Error" />
 			<description>

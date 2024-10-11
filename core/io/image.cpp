@@ -1379,7 +1379,7 @@ void Image::crop_from_point(int p_x, int p_y, int p_width, int p_height) {
 
 	int row_copy_size = p_width;
 	int empty_buffer_size = 0;
-	bool forward = true;	//Iteration direction
+	bool forward = true; //Iteration direction
 
 	int effective = width - p_x;
 	if (p_width > effective) {
@@ -1389,9 +1389,9 @@ void Image::crop_from_point(int p_x, int p_y, int p_width, int p_height) {
 	}
 
 	uint8_t *buffer_row = new uint8_t[row_copy_size * pixel_size];
-	const uint8_t *buffer_empty = new uint8_t[empty_buffer_size * pixel_size]{0};
+	const uint8_t *buffer_empty = new uint8_t[empty_buffer_size * pixel_size]{ 0 };
 
-	int r = forward ? 0: p_height - 1;
+	int r = forward ? 0 : p_height - 1;
 
 	while (r >= 0 && r < p_height) {
 		int offset_orig = p_x + ((r + (p_height > height ? 0 : p_y)) * width);

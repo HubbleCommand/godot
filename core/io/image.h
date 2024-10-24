@@ -130,8 +130,7 @@ public:
 
 	enum Rotation {
 		ROTATION_REVERSE_SAMPLING,
-		ROTATION_SHEARING,
-		ROTATION_AREA_MAPPING
+		ROTATION_SHEARING
 	};
 
 	//this is used for compression

@@ -851,8 +851,5 @@
 		<constant name="SHEARING" value="1" enum="Rotation">
 			Rotates an image by doing three consecutive shear operations. Best memory performance.
 		</constant>
-		<constant name="AREA_MAPPING" value="2" enum="Rotation">
-			Specific type of reverse sampling, good for grayscale images. Not the fastest.
-		</constant>
 	</constants>
 </class>

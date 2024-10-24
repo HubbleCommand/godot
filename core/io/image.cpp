@@ -1547,9 +1547,6 @@ void Image::rotate(float p_angle, ClockDirection p_direction, Rotation p_algorit
 		_copy_internals_from(dst);
 	}
 
-	if (p_algorithm == ROTATION_AREA_MAPPING) {
-	}
-
 	if (p_algorithm == ROTATION_SHEARING) {
 		float shear1et3factor = - Math::tan(angle_radians / 2);
 		float shear2factor = Math::sin(angle_radians);
@@ -3777,7 +3774,6 @@ void Image::_bind_methods() {
 
 	BIND_ENUM_CONSTANT(ROTATION_REVERSE_SAMPLING);
 	BIND_ENUM_CONSTANT(ROTATION_SHEARING);
-	BIND_ENUM_CONSTANT(ROTATION_AREA_MAPPING);
 }
 
 void Image::set_compress_bc_func(void (*p_compress_func)(Image *, UsedChannels)) {

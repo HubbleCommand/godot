@@ -1500,6 +1500,10 @@ void Image::shear(Orientation p_axis, float p_factor, Interpolation p_interpolat
 					break;
 			}
 
+		}
+	}
+}
+
 void Image::rotate(float p_angle, ClockDirection p_direction, Rotation p_algorithm, Interpolation p_interpolation) {
 	ERR_FAIL_COND_MSG(!_can_modify(format), "Cannot rotate in compressed or custom image formats.");
 	ERR_FAIL_COND_MSG(width <= 0, "The Image width specified (" + itos(width) + " pixels) must be greater than 0 pixels.");

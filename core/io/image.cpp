@@ -1420,6 +1420,90 @@ void Image::crop(int p_width, int p_height) {
 	crop_from_point(0, 0, p_width, p_height);
 }
 
+void Image::shear(Orientation p_axis, float p_factor, Interpolation p_interpolation) {
+	float factor_abs = abs(p_factor);
+	WARN_PRINT(vformat("axis %s interpolation %s", p_axis, p_interpolation));
+	WARN_PRINT(vformat("shear factor: %s absolute: %s", p_factor, factor_abs));
+
+	int width_original = width;
+	int height_original = height;
+
+	if (p_axis == HORIZONTAL) {
+		crop(width + (factor_abs * height), height);
+	} else {
+		crop(width, height + (factor_abs * width));
+	}
+
+	WARN_PRINT(vformat("original (%s, %s) to (%s, %s) after shear", width_original, height_original, width, height));
+
+	uint32_t pixel_size = get_format_pixel_size(format);
+
+	int buffsize = 0;
+	switch (p_interpolation) {
+		case INTERPOLATE_NEAREST:
+		 	buffsize = 1;
+			break;
+		case INTERPOLATE_BILINEAR:
+			buffsize = 3;
+			break;
+		case INTERPOLATE_CUBIC:
+			buffsize = 4;
+			break;
+		//TODO trilinear and lancszos
+		default:
+			break;
+	}
+	int interpbuffindex = 0;
+	uint8_t interpolation_buffer[pixel_size * buffsize] = { 0 };
+
+	const uint8_t *r = data.ptr();
+	uint8_t *w = data.ptrw();
+
+	for (int y = height - 1; y >= 0; y--) {
+		for (int x = width - 1; x >= 0; x--) {
+			switch (p_interpolation) {
+				case INTERPOLATE_NEAREST: {
+					_get_pixelb(x, y, pixel_size, r, interpolation_buffer);
+					uint32_t ofs = (y * width + x) * pixel_size;
+					memset(w + ofs, 0, pixel_size);
+
+					int nearest_x = p_axis == HORIZONTAL ? x + p_factor * y : x;
+					int nearest_y = p_axis == HORIZONTAL ? y : y + p_factor * x;
+
+					if (p_factor > 0) {
+						if (nearest_x >= 0 && nearest_x < width && nearest_y >= 0 && nearest_y < height) {
+							_put_pixelb(nearest_x, nearest_y, pixel_size, w, interpolation_buffer);
+						}
+					} else {
+						int nx = p_axis == HORIZONTAL ? (width - width_original) + nearest_x : x;
+						int ny = p_axis == HORIZONTAL ? y : (height - height_original) + nearest_y;
+						if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+							_put_pixelb(nx, ny, pixel_size, w, interpolation_buffer);
+						}
+					}
+					break;
+				}
+				case INTERPOLATE_BILINEAR:
+					if (interpbuffindex == 1) {
+						interpbuffindex = 0;
+					} else {
+						interpbuffindex = 1;
+					}
+					break;
+				case INTERPOLATE_CUBIC:
+					break;
+				case INTERPOLATE_TRILINEAR: //Use MipMaps for interpolation
+					break;
+				case INTERPOLATE_LANCZOS:
+					break;
+				default:
+					break;
+			}
+
+		}
+	}
+}
+
 void Image::rotate_90(ClockDirection p_direction) {
 	ERR_FAIL_COND_MSG(!_can_modify(format), "Cannot rotate in compressed or custom image formats.");
 	ERR_FAIL_COND_MSG(width <= 0, "The Image width specified (" + itos(width) + " pixels) must be greater than 0 pixels.");
@@ -3508,6 +3592,7 @@ void Image::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("decompress"), &Image::decompress);
 	ClassDB::bind_method(D_METHOD("is_compressed"), &Image::is_compressed);
 
+	ClassDB::bind_method(D_METHOD("shear", "axis", "factor", "interpolation"), &Image::shear);
 	ClassDB::bind_method(D_METHOD("rotate_90", "direction"), &Image::rotate_90);
 	ClassDB::bind_method(D_METHOD("rotate_180"), &Image::rotate_180);
 

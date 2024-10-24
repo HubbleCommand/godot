@@ -1515,11 +1515,19 @@ void Image::rotate(float p_angle, ClockDirection p_direction, Rotation p_algorit
 	float cos = Math::cos(angle_radians);
 
 	if (p_algorithm == ROTATION_REVERSE_SAMPLING) {
-		int max = width > height ? width : height;
-		int min = width <= height ? width : height;
-		Vector2 size = Vector2(width, height);
-		int new_width = Math::ceil(size.length());
-		int new_height = new_width;
+		bool max_size = false;
+		int new_width;
+		int new_height;
+
+		if (max_size) {
+			new_width = static_cast<int>(abs(width * cos) + abs(height * sin));
+			new_height = static_cast<int>(abs(width * sin) + abs(height * cos));
+		} else {
+			Vector2 size = Vector2(width, height);
+			new_width = Math::ceil(size.length());
+			new_height = new_width;
+		}
+
 		Vector2 new_center = Vector2(new_width / 2.0f, new_height / 2.0f);
 		Vector2 center = Vector2(width / 2.0f, height / 2.0f);
 

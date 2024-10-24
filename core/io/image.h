@@ -128,6 +128,12 @@ public:
 		/* INTERPOLATE GAUSS */
 	};
 
+	enum Rotation {
+		ROTATION_REVERSE_SAMPLING,
+		ROTATION_SHEARING,
+		ROTATION_AREA_MAPPING
+	};
+
 	//this is used for compression
 	enum UsedChannels {
 		USED_CHANNELS_L,
@@ -270,6 +276,8 @@ public:
 	void crop(int p_width, int p_height);
 
 	void shear(Orientation p_axis, float p_factor, Interpolation p_interpolation = INTERPOLATE_NEAREST);
+
+	void rotate(float p_angle, ClockDirection p_direction = CLOCKWISE, Rotation p_algorithm = ROTATION_SHEARING, Interpolation p_interpolation = INTERPOLATE_NEAREST);
 
 	void rotate_90(ClockDirection p_direction);
 	void rotate_180();
@@ -457,5 +465,6 @@ VARIANT_ENUM_CAST(Image::UsedChannels)
 VARIANT_ENUM_CAST(Image::AlphaMode)
 VARIANT_ENUM_CAST(Image::RoughnessChannel)
 VARIANT_ENUM_CAST(Image::ASTCFormat)
+VARIANT_ENUM_CAST(Image::Rotation)
 
 #endif // IMAGE_H

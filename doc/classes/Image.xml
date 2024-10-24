@@ -448,6 +448,18 @@
 				Converts a standard RGBE (Red Green Blue Exponent) image to an sRGB image.
 			</description>
 		</method>
+		<method name="rotate">
+			<return type="void" />
+			<param index="0" name="angle" type="float" />
+			<param index="1" name="direction" type="int" enum="ClockDirection" default="false" />
+			<param index="2" name="algorithm" type="int" enum="Image.Rotation" default="1" />
+			<param index="3" name="interpolation" type="int" enum="Image.Interpolation" default="1" />
+			<!--<param index="4" name="image_target" type="Image" />-->
+			<description>
+				Rotates the image in the specified [param direction] by [param angle] degrees. The width and height of the image must be greater than [code]1[/code]. If the width and height are not equal, the image will be resized.
+				[b]Note:[/b] passing a "buffer" image only works with mapping algorithms.
+			</description>
+		</method>
 		<method name="rotate_90">
 			<return type="void" />
 			<param index="0" name="direction" type="int" enum="ClockDirection" />
@@ -589,6 +601,15 @@
 				[/csharp]
 				[/codeblocks]
 				This is the same as [method set_pixel], but with a [Vector2i] argument instead of two integer arguments.
+			</description>
+		</method>
+		<method name="shear">
+			<return type="void" />
+			<param index="0" name="axis" type="int" enum="Orientation" />
+			<param index="1" name="factor" type="float" />
+			<param index="2" name="interpolation" type="int" enum="Image.Interpolation" default="1" />
+			<description>
+				Shears the image on the specified [param axis] by [param factor] factor. The width and height of the image must be greater than [code]1[/code].
 			</description>
 		</method>
 		<method name="shrink_x2">
@@ -823,6 +844,15 @@
 		</constant>
 		<constant name="ASTC_FORMAT_8x8" value="1" enum="ASTCFormat">
 			Hint to indicate that the low quality 8×8 ASTC compression format should be used.
+		</constant>
+		<constant name="REVERSE_SAMPLING" value="0" enum="Rotation">
+			Rotate the image by creating a larger temporary image, and sampling the original image to it.
+		</constant>
+		<constant name="SHEARING" value="1" enum="Rotation">
+			Rotates an image by doing three consecutive shear operations. Best memory performance.
+		</constant>
+		<constant name="AREA_MAPPING" value="2" enum="Rotation">
+			Specific type of reverse sampling, good for grayscale images. Not the fastest.
 		</constant>
 	</constants>
 </class>

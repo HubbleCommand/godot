@@ -101,6 +101,9 @@ SceneStringNames::SceneStringNames() {
 	area_exited = StaticCString::create("area_exited");
 
 	line_separation = StaticCString::create("line_separation");
+	font = StaticCString::create("font");
+	font_size = StaticCString::create("font_size");
+	font_color = StaticCString::create("font_color");
 
 	frame_changed = StaticCString::create("frame_changed");
 	texture_changed = StaticCString::create("texture_changed");
@@ -127,8 +130,19 @@ SceneStringNames::SceneStringNames() {
 	shader_overrides_group = StaticCString::create("_shader_overrides_group_");
 	shader_overrides_group_active = StaticCString::create("_shader_overrides_group_active_");
 
+	_custom_type_script = StaticCString::create("_custom_type_script");
+
 	pressed = StaticCString::create("pressed");
 	id_pressed = StaticCString::create("id_pressed");
+	toggled = StaticCString::create("toggled");
 
 	panel = StaticCString::create("panel");
+
+	item_selected = StaticCString::create("item_selected");
+
+	confirmed = StaticCString::create("confirmed");
+
+	text_changed = StaticCString::create("text_changed");
+	text_submitted = StaticCString::create("text_submitted");
+	value_changed = StaticCString::create("value_changed");
 }

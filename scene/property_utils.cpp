@@ -44,10 +44,28 @@ bool PropertyUtils::is_property_value_different(const Object *p_object, const Va
 		// This must be done because, as some scenes save as text, there might be a tiny difference in floats due to numerical error.
 		return !Math::is_equal_approx((float)p_a, (float)p_b);
 	} else if (p_a.get_type() == Variant::NODE_PATH && p_b.get_type() == Variant::OBJECT) {
+		// With properties of type Node, left side is NodePath, while right side is Node.
 		const Node *base_node = Object::cast_to<Node>(p_object);
 		const Node *target_node = Object::cast_to<Node>(p_b);
 		if (base_node && target_node) {
 			return p_a != base_node->get_path_to(target_node);
+		}
+	}
+
+	if (p_a.get_type() == Variant::ARRAY && p_b.get_type() == Variant::ARRAY) {
+		const Node *base_node = Object::cast_to<Node>(p_object);
+		Array array1 = p_a;
+		Array array2 = p_b;
+
+		if (base_node && !array1.is_empty() && array2.size() == array1.size() && array1[0].get_type() == Variant::NODE_PATH && array2[0].get_type() == Variant::OBJECT) {
+			// Like above, but NodePaths/Nodes are inside arrays.
+			for (int i = 0; i < array1.size(); i++) {
+				const Node *target_node = Object::cast_to<Node>(array2[i]);
+				if (!target_node || array1[i] != base_node->get_path_to(target_node)) {
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 
@@ -69,6 +87,16 @@ Variant PropertyUtils::get_property_default_value(const Object *p_object, const 
 	}
 	if (r_is_valid) {
 		*r_is_valid = false;
+	}
+
+	// Handle special case "script" property, where the default value is either null or the custom type script.
+	// Do this only if there's no states stack cache to trace for default values.
+	if (!p_states_stack_cache && p_property == CoreStringName(script) && p_object->has_meta(SceneStringName(_custom_type_script))) {
+		Ref<Script> ct_scr = p_object->get_meta(SceneStringName(_custom_type_script));
+		if (r_is_valid) {
+			*r_is_valid = true;
+		}
+		return ct_scr;
 	}
 
 	Ref<Script> topmost_script;

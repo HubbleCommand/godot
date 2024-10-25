@@ -36,7 +36,8 @@
 
 #include "extensions/openxr_eye_gaze_interaction.h"
 #include "extensions/openxr_hand_interaction_extension.h"
-#include "thirdparty/openxr/include/openxr/openxr.h"
+
+#include <openxr/openxr.h>
 
 void OpenXRInterface::_bind_methods() {
 	// lifecycle signals
@@ -299,10 +300,7 @@ void OpenXRInterface::_load_action_map() {
 						continue;
 					}
 
-					PackedStringArray paths = xr_binding->get_paths();
-					for (int k = 0; k < paths.size(); k++) {
-						openxr_api->interaction_profile_add_binding(ip, action->action_rid, paths[k]);
-					}
+					openxr_api->interaction_profile_add_binding(ip, action->action_rid, xr_binding->get_binding_path());
 				}
 
 				// Now submit our suggestions
@@ -651,6 +649,10 @@ bool OpenXRInterface::initialize() {
 	// make this our primary interface
 	xr_server->set_primary_interface(this);
 
+	// Register an additional output with the display server, so rendering won't
+	// be skipped if no windows are visible.
+	DisplayServer::get_singleton()->register_additional_output(this);
+
 	initialized = true;
 
 	return initialized;
@@ -673,6 +675,8 @@ void OpenXRInterface::uninitialize() {
 			head.unref();
 		}
 	}
+
+	DisplayServer::get_singleton()->unregister_additional_output(this);
 
 	initialized = false;
 }

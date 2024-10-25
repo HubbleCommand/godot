@@ -35,6 +35,7 @@
 
 #include "core/config/project_settings.h"
 #include "core/io/dir_access.h"
+#include "core/io/image.h"
 #include "core/os/os.h"
 #include "storage/texture_storage.h"
 
@@ -62,6 +63,10 @@
 #define _EXT_DEBUG_SEVERITY_LOW_ARB 0x9148
 #define _EXT_DEBUG_OUTPUT 0x92E0
 
+#ifndef GL_FRAMEBUFFER_SRGB
+#define GL_FRAMEBUFFER_SRGB 0x8DB9
+#endif
+
 #ifndef GLAPIENTRY
 #if defined(WINDOWS_ENABLED)
 #define GLAPIENTRY APIENTRY
@@ -72,7 +77,7 @@
 
 #if !defined(IOS_ENABLED) && !defined(WEB_ENABLED)
 // We include EGL below to get debug callback on GLES2 platforms,
-// but EGL is not available on iOS.
+// but EGL is not available on iOS or the web.
 #define CAN_DEBUG
 #endif
 
@@ -80,6 +85,10 @@
 
 #if defined(MINGW_ENABLED) || defined(_MSC_VER)
 #define strcpy strcpy_s
+#endif
+
+#ifdef WINDOWS_ENABLED
+bool RasterizerGLES3::screen_flipped_y = false;
 #endif
 
 bool RasterizerGLES3::gles_over_gl = true;
@@ -107,7 +116,7 @@ void RasterizerGLES3::end_frame(bool p_swap_buffers) {
 	utils->capture_timestamps_end();
 }
 
-void RasterizerGLES3::end_viewport(bool p_swap_buffers) {
+void RasterizerGLES3::gl_end_frame(bool p_swap_buffers) {
 	if (p_swap_buffers) {
 		DisplayServer::get_singleton()->swap_buffers();
 	} else {
@@ -361,6 +370,11 @@ RasterizerGLES3::RasterizerGLES3() {
 	fog = memnew(GLES3::Fog);
 	canvas = memnew(RasterizerCanvasGLES3());
 	scene = memnew(RasterizerSceneGLES3());
+
+	// Disable OpenGL linear to sRGB conversion, because Godot will always do this conversion itself.
+	if (config->srgb_framebuffer_supported) {
+		glDisable(GL_FRAMEBUFFER_SRGB);
+	}
 }
 
 RasterizerGLES3::~RasterizerGLES3() {
@@ -380,6 +394,12 @@ void RasterizerGLES3::_blit_render_target_to_screen(RID p_render_target, Display
 		flip_y = false;
 	}
 
+#ifdef WINDOWS_ENABLED
+	if (screen_flipped_y) {
+		flip_y = !flip_y;
+	}
+#endif
+
 	GLuint read_fbo = 0;
 	glGenFramebuffers(1, &read_fbo);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, read_fbo);
@@ -398,8 +418,7 @@ void RasterizerGLES3::_blit_render_target_to_screen(RID p_render_target, Display
 			// Viewport doesn't cover entire window so clear window to black before blitting.
 			// Querying the actual window size from the DisplayServer would deadlock in separate render thread mode,
 			// so let's set the biggest viewport the implementation supports, to be sure the window is fully covered.
-			GLsizei max_vp[2] = {};
-			glGetIntegerv(GL_MAX_VIEWPORT_DIMS, max_vp);
+			Size2i max_vp = GLES3::Utilities::get_singleton()->get_maximum_viewport_size();
 			glViewport(0, 0, max_vp[0], max_vp[1]);
 			glClearColor(0.0, 0.0, 0.0, 1.0);
 			glClear(GL_COLOR_BUFFER_BIT);
@@ -477,9 +496,14 @@ void RasterizerGLES3::set_boot_image(const Ref<Image> &p_image, const Color &p_c
 		screenrect.position += ((Size2(win_size.width, win_size.height) - screenrect.size) / 2.0).floor();
 	}
 
-	// Flip Y.
-	screenrect.position.y = win_size.y - screenrect.position.y;
-	screenrect.size.y = -screenrect.size.y;
+#ifdef WINDOWS_ENABLED
+	if (!screen_flipped_y)
+#endif
+	{
+		// Flip Y.
+		screenrect.position.y = win_size.y - screenrect.position.y;
+		screenrect.size.y = -screenrect.size.y;
+	}
 
 	// Normalize texture coordinates to window size.
 	screenrect.position /= win_size;
@@ -492,7 +516,7 @@ void RasterizerGLES3::set_boot_image(const Ref<Image> &p_image, const Color &p_c
 	copy_effects->copy_to_rect(screenrect);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	end_viewport(true);
+	gl_end_frame(true);
 
 	texture_storage->texture_free(texture);
 }

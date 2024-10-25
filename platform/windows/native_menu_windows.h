@@ -31,6 +31,7 @@
 #ifndef NATIVE_MENU_WINDOWS_H
 #define NATIVE_MENU_WINDOWS_H
 
+#include "core/io/image.h"
 #include "core/templates/hash_map.h"
 #include "core/templates/rid_owner.h"
 #include "servers/display/native_menu.h"
@@ -51,6 +52,7 @@ class NativeMenuWindows : public NativeMenu {
 		Callable callback;
 		Variant meta;
 		GlobalMenuCheckType checkable_type;
+		bool checked = false;
 		int max_states = 0;
 		int state = 0;
 		Ref<Image> img;

@@ -348,7 +348,7 @@ void ScreenSelect::_build_advanced_menu() {
 	}
 
 	// Populate screen list.
-	const real_t height = real_t(get_theme_font_size("font_size")) * 1.5;
+	const real_t height = real_t(get_theme_font_size(SceneStringName(font_size))) * 1.5;
 
 	int current_screen = get_window()->get_current_screen();
 	for (int i = 0; i < DisplayServer::get_singleton()->get_screen_count(); i++) {
@@ -365,7 +365,7 @@ void ScreenSelect::_build_advanced_menu() {
 
 		if (i == current_screen) {
 			Color accent_color = get_theme_color("accent_color", EditorStringName(Editor));
-			button->add_theme_color_override("font_color", accent_color);
+			button->add_theme_color_override(SceneStringName(font_color), accent_color);
 		}
 
 		button->connect(SceneStringName(pressed), callable_mp(this, &ScreenSelect::_emit_screen_signal).bind(i));
@@ -391,9 +391,8 @@ void ScreenSelect::_notification(int p_what) {
 		} break;
 		case NOTIFICATION_THEME_CHANGED: {
 			set_icon(get_editor_theme_icon("MakeFloating"));
-			popup_background->add_theme_style_override(SceneStringName(panel), get_theme_stylebox("PanelForeground", EditorStringName(EditorStyles)));
 
-			const real_t popup_height = real_t(get_theme_font_size("font_size")) * 2.0;
+			const real_t popup_height = real_t(get_theme_font_size(SceneStringName(font_size))) * 2.0;
 			popup->set_min_size(Size2(0, popup_height * 3));
 		} break;
 	}
@@ -454,13 +453,9 @@ ScreenSelect::ScreenSelect() {
 	// Create the popup.
 	const Size2 borders = Size2(4, 4) * EDSCALE;
 
-	popup = memnew(Popup);
+	popup = memnew(PopupPanel);
 	popup->connect("popup_hide", callable_mp(static_cast<BaseButton *>(this), &ScreenSelect::set_pressed).bind(false));
 	add_child(popup);
-
-	popup_background = memnew(Panel);
-	popup_background->set_anchors_and_offsets_preset(PRESET_FULL_RECT);
-	popup->add_child(popup_background);
 
 	MarginContainer *popup_root = memnew(MarginContainer);
 	popup_root->add_theme_constant_override("margin_right", borders.width);

@@ -74,13 +74,13 @@
 		return;                                                           \
 	}
 
-#else
+#else // !DEBUG_ENABLED
 
 #define VALIDATE_ARG_COUNT(m_count)
 #define VALIDATE_ARG_INT(m_arg)
 #define VALIDATE_ARG_NUM(m_arg)
 
-#endif
+#endif // DEBUG_ENABLED
 
 struct GDScriptUtilityFunctionsDefinitions {
 #ifndef DISABLE_DEPRECATED
@@ -232,7 +232,7 @@ struct GDScriptUtilityFunctionsDefinitions {
 
 	static inline void load(Variant *r_ret, const Variant **p_args, int p_arg_count, Callable::CallError &r_error) {
 		VALIDATE_ARG_COUNT(1);
-		if (p_args[0]->get_type() != Variant::STRING) {
+		if (!p_args[0]->is_string()) {
 			r_error.error = Callable::CallError::CALL_ERROR_INVALID_ARGUMENT;
 			r_error.argument = 0;
 			r_error.expected = Variant::STRING;

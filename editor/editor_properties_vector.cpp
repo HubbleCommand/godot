@@ -130,9 +130,11 @@ void EditorPropertyVectorN::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_READY: {
 			if (linked->is_visible()) {
-				const String key = vformat("%s:%s", get_edited_object()->get_class(), get_edited_property());
-				linked->set_pressed_no_signal(EditorSettings::get_singleton()->get_project_metadata("linked_properties", key, true));
-				_update_ratio();
+				if (get_edited_object()) {
+					const String key = vformat("%s:%s", get_edited_object()->get_class(), get_edited_property());
+					linked->set_pressed_no_signal(EditorSettings::get_singleton()->get_project_metadata("linked_properties", key, true));
+					_update_ratio();
+				}
 			}
 		} break;
 
@@ -222,7 +224,7 @@ EditorPropertyVectorN::EditorPropertyVectorN(Variant::Type p_type, bool p_force_
 		if (horizontal) {
 			spin[i]->set_h_size_flags(SIZE_EXPAND_FILL);
 		}
-		spin[i]->connect(SNAME("value_changed"), callable_mp(this, &EditorPropertyVectorN::_value_changed).bind(String(COMPONENT_LABELS[i])));
+		spin[i]->connect(SceneStringName(value_changed), callable_mp(this, &EditorPropertyVectorN::_value_changed).bind(String(COMPONENT_LABELS[i])));
 		spin[i]->connect(SNAME("grabbed"), callable_mp(this, &EditorPropertyVectorN::_grab_changed).bind(true));
 		spin[i]->connect(SNAME("ungrabbed"), callable_mp(this, &EditorPropertyVectorN::_grab_changed).bind(false));
 		add_focusable(spin[i]);
@@ -236,7 +238,7 @@ EditorPropertyVectorN::EditorPropertyVectorN(Variant::Type p_type, bool p_force_
 	linked->set_stretch_mode(TextureButton::STRETCH_KEEP_CENTERED);
 	linked->set_tooltip_text(TTR("Lock/Unlock Component Ratio"));
 	linked->connect(SceneStringName(pressed), callable_mp(this, &EditorPropertyVectorN::_update_ratio));
-	linked->connect(SNAME("toggled"), callable_mp(this, &EditorPropertyVectorN::_store_link));
+	linked->connect(SceneStringName(toggled), callable_mp(this, &EditorPropertyVectorN::_store_link));
 	hb->add_child(linked);
 
 	add_child(hb);

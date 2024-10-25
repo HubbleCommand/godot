@@ -327,6 +327,13 @@ TEST_CASE("[Image] Modifying pixels of an image") {
 	}
 }
 
+TEST_CASE("[Image] Image crop") {
+	Ref<Image> image = memnew(Image(100, 50, false, Image::FORMAT_RGBA8));
+	image->crop_from_point(10, 10, 50, 25);
+	CHECK_MESSAGE(image->get_width() == 50, "Width after crop should be 50 pixels.");
+	CHECK_MESSAGE(image->get_height() == 25, "Height after crop should be 50 pixels.");
+}
+
 TEST_CASE("[Image] Custom mipmaps") {
 	Ref<Image> image = memnew(Image(100, 100, false, Image::FORMAT_RGBA8));
 

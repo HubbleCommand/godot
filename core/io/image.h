@@ -276,8 +276,7 @@ public:
 
 	void shear(Orientation p_axis, float p_factor, Interpolation p_interpolation = INTERPOLATE_NEAREST);
 
-	void rotate(float p_angle, ClockDirection p_direction = CLOCKWISE, Rotation p_algorithm = ROTATION_SHEARING, Interpolation p_interpolation = INTERPOLATE_NEAREST);
-
+	void rotate(float p_angle, Rotation p_algorithm = ROTATION_SHEARING, Interpolation p_interpolation = INTERPOLATE_NEAREST, Ref<Image> p_target = Ref<Image>());
 	void rotate_90(ClockDirection p_direction);
 	void rotate_180();
 

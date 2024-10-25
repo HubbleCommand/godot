@@ -1504,7 +1504,8 @@ void Image::shear(Orientation p_axis, float p_factor, Interpolation p_interpolat
 	}
 }
 
-void Image::rotate(float p_angle, ClockDirection p_direction, Rotation p_algorithm, Interpolation p_interpolation) {
+
+void Image::rotate(float p_angle, Rotation p_algorithm, Interpolation p_interpolation, Ref<Image> p_target) {
 	ERR_FAIL_COND_MSG(!_can_modify(format), "Cannot rotate in compressed or custom image formats.");
 	ERR_FAIL_COND_MSG(width <= 0, "The Image width specified (" + itos(width) + " pixels) must be greater than 0 pixels.");
 	ERR_FAIL_COND_MSG(height <= 0, "The Image height specified (" + itos(height) + " pixels) must be greater than 0 pixels.");
@@ -1535,7 +1536,12 @@ void Image::rotate(float p_angle, ClockDirection p_direction, Rotation p_algorit
 		Vector2 new_center = Vector2(new_width / 2.0f, new_height / 2.0f);
 		Vector2 center = Vector2(width / 2.0f, height / 2.0f);
 
-		Image dst(new_width, new_height, false, format);
+		Ref<Image> dst;
+		if (p_target.is_valid()) {
+			dst = p_target;
+		} else {
+			dst = create_empty(new_width, new_height, false, format);
+		}
 
 		for (int y = 0; y < new_height; y++) {
 			for (int x = 0; x < new_width; x++) {
@@ -1551,12 +1557,15 @@ void Image::rotate(float p_angle, ClockDirection p_direction, Rotation p_algorit
 
 				//We check that we are in the bounds of the brush, otherwise we don't do anything
 				if (!(x_target < 0 || x_target >= width || y_target < 0 || y_target >= height)) {
-					dst.set_pixel(x, y, get_pixel(x_target, y_target));
+					dst->set_pixel(x, y, get_pixel(x_target, y_target));
 				}
 			}
 		}
 
-		_copy_internals_from(dst);
+		if (p_target.is_null()) {
+			_copy_internals_from(**dst);
+			dst.unref();
+		}
 	}
 
 	if (p_algorithm == ROTATION_SHEARING) {
@@ -3662,7 +3671,7 @@ void Image::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_compressed"), &Image::is_compressed);
 
 	ClassDB::bind_method(D_METHOD("shear", "axis", "factor", "interpolation"), &Image::shear);
-	ClassDB::bind_method(D_METHOD("rotate", "angle", "direction", "algorithm"), &Image::rotate);
+	ClassDB::bind_method(D_METHOD("rotate", "angle", "direction", "algorithm", "target"), &Image::rotate, DEFVAL(ROTATION_SHEARING), DEFVAL(INTERPOLATE_NEAREST), DEFVAL(Ref<Image>()));
 	ClassDB::bind_method(D_METHOD("rotate_90", "direction"), &Image::rotate_90);
 	ClassDB::bind_method(D_METHOD("rotate_180"), &Image::rotate_180);
 

@@ -1483,6 +1483,7 @@ void Image::shear(Orientation p_axis, float p_factor, Interpolation p_interpolat
 					}
 					break;
 				}
+				//Look at the resize function for interpolation...
 				case INTERPOLATE_BILINEAR:
 					if (interpbuffindex == 1) {
 						interpbuffindex = 0;
@@ -1503,7 +1504,6 @@ void Image::shear(Orientation p_axis, float p_factor, Interpolation p_interpolat
 		}
 	}
 }
-
 
 void Image::rotate(float p_angle, Rotation p_algorithm, Interpolation p_interpolation, Ref<Image> p_target) {
 	ERR_FAIL_COND_MSG(!_can_modify(format), "Cannot rotate in compressed or custom image formats.");
@@ -1547,15 +1547,14 @@ void Image::rotate(float p_angle, Rotation p_algorithm, Interpolation p_interpol
 			for (int x = 0; x < new_width; x++) {
 				Vector2 xy_to_origin = Vector2(x, y) - new_center; //translate the point back to the origin
 
-				//Rotate this pixel to where it should be (rotate around the origin)
+				//Rotate this pixel around origin to where it should be
 				float x_new = xy_to_origin.x * cos - xy_to_origin.y * sin;
 				float y_new = xy_to_origin.x * sin + xy_to_origin.y * cos;
 
-				//Translate the rotated pixel into the tmp brush (correct for size & origin difference)
+				//Translate the rotated pixel, correct for size & origin difference
 				int x_target = (int)Math::round(x_new + center.x);
 				int y_target = (int)Math::round(y_new + center.y);
 
-				//We check that we are in the bounds of the brush, otherwise we don't do anything
 				if (!(x_target < 0 || x_target >= width || y_target < 0 || y_target >= height)) {
 					dst->set_pixel(x, y, get_pixel(x_target, y_target));
 				}
